@@ -99,7 +99,8 @@ class InventoryReconciliationApp:
 
                 # Check for differences in values and populate delta values accordingly
                 for col in reference_df.columns:
-
+                    if pd.isna(matching_row_reference[col][0]) and pd.isna(matching_row_scan[col][0]):
+                        continue
                     # If-condifiton to evalute if there is at least one difference between reference
                     # and scan files
                     if matching_row_reference[col][0] != matching_row_scan[col][0]:
