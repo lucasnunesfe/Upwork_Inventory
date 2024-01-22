@@ -104,7 +104,7 @@ class InventoryReconciliationApp:
                     # and scan files
                     if matching_row_reference[col][0] != matching_row_scan[col][0]:
                         # Prepare log input to be filled in "Change" column in exported file
-                        delta_value = f"in df a: {matching_row_reference[col][0]} -> in df b: {matching_row_scan[col][0]}"
+                        delta_value = f"ref {col}: {matching_row_reference[col][0]} -> scan {col}: {matching_row_scan[col][0]}"
                         df_buffer2 = pd.concat([df_buffer1, matching_row_scan])
                         # Stores all tracked differences for that same Barcode Number
                         bufferDeltaList.append(delta_value)
