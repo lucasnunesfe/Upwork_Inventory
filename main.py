@@ -38,6 +38,7 @@ class InventoryReconciliationApp:
         if not self.reference_file_path or not self.scan_file_path:
             return
 
+        # Read data from reference and scan files
         reference_df = pd.read_excel(self.reference_file_path)
         scan_df = pd.read_excel(self.scan_file_path)
 
@@ -45,62 +46,90 @@ class InventoryReconciliationApp:
         reference_df.columns = [col.replace(' ', '_') for col in reference_df.columns]
         scan_df.columns = [col.replace(' ', '_') for col in scan_df.columns]
 
-        # Get column 'x' from dataframes 'a' and 'b' and turn into a list
+        # Get column 'x' from dataframes from reference and scan files and turn them into lists
         column_BarcodeNumber_reference = list(reference_df['Barcode_Number'])
         column_BarcodeNumber_scan = list(scan_df['Barcode_Number'])
 
         # Combine the lists and remove duplicates
         unique_values = list(set(column_BarcodeNumber_reference + column_BarcodeNumber_scan))
 
+        # Initialize DataFrames to store results
         df_buffer1 = pd.DataFrame(columns=reference_df.columns)
         df_buffer2 = pd.DataFrame(columns=reference_df.columns)
+        # df_final is the dataframe covering the table to be exported in excel file
         df_final = pd.DataFrame(columns=reference_df.columns)
         df_final["delta"] = None
         df_final["Status"] = None
 
+        # Iterate each existing Barcode Numer (regardless it is from reference or scan files)
         for val in unique_values:
+
+            # If Barcode Number is available in both reference and scan files
             if val in reference_df['Barcode_Number'].values and val in scan_df['Barcode_Number'].values:
+
+                # Matching_row is a single-line dataframe comprising the Barcode Number being evaluated
                 matching_row_reference = reference_df[reference_df['Barcode_Number'] == val]
                 matching_row_scan = scan_df[scan_df['Barcode_Number'] == val]
 
+                # Resetting index to make sure they are 0-labeled
                 matching_row_reference = matching_row_reference.reset_index(drop=True)
                 matching_row_scan = matching_row_scan.reset_index(drop=True)
 
+                # Support list to be used in logic below
                 bufferDeltaList = []
 
+                # Variable "flag" to monitor if there is any column with different values
+                # between reference and scan files
+                # 0 means there is no different columns' values
                 control_change = 0
 
                 # Check for differences in values and populate delta values accordingly
                 for col in reference_df.columns:
 
+                    # If-condifiton to evalute if there is at least one difference between reference
+                    # and scan files
                     if matching_row_reference[col][0] != matching_row_scan[col][0]:
+                        # Prepare log input to be filled in "Change" column in exported file
                         delta_value = f"in df a: {matching_row_reference[col][0]} -> in df b: {matching_row_scan[col][0]}"
-
                         df_buffer2 = pd.concat([df_buffer1, matching_row_scan])
-
+                        # Stores all tracked differences for that same Barcode Number
                         bufferDeltaList.append(delta_value)
-                        #df_buffer2["Status"] = "C"
+                        # Sets the flag to 1, indicating there is at least 1 column with
+                        # Different values
                         control_change = 1
 
+                    # If-condition to evaluate if the entry in reference and scan files are
+                    # exactly the same
+                    elif matching_row_reference[col][0] == matching_row_scan[col][0]:
+                        df_buffer2["Status"] = "F"
+
+                # At the end of all columns evaluation for that Barcode Number
+                # it is then defined Changed/different values are present
                 if control_change == 1:
+                    # Flag "C" added to new column from export file called Status
                     df_buffer2["Status"] = "C"
                 else:
                     continue
 
+                # Transform list into str and input "delta" column
                 df_buffer2["delta"] = "".join(str(bufferDeltaList))
 
+            # If Barcode Number is missing from scan and present in reference file
             if val in reference_df['Barcode_Number'].values and val not in scan_df['Barcode_Number'].values:
                 matching_row_reference = reference_df[reference_df['Barcode_Number'] == val]
                 df_buffer2 = pd.concat([df_buffer1, matching_row_reference])
                 df_buffer2["Status"] = "M"
 
+            # If Barcode Number is present in reference and missing from scan file
             if val not in reference_df['Barcode_Number'].values and val in scan_df['Barcode_Number'].values:
                 matching_row_scan = scan_df[scan_df['Barcode_Number'] == val]
                 df_buffer2 = pd.concat([df_buffer1, matching_row_scan])
                 df_buffer2["Status"] = "N"
 
+            # Append/concat df_final
             df_final = pd.concat([df_final, df_buffer2])
 
+        # Reset index to make it ok
         df_final = df_final.reset_index(drop=True)
 
         # Save the result to an export file
