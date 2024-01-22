@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import pandas as pd
 import numpy as np
 import openpyxl
@@ -8,25 +8,39 @@ class InventoryReconciliationApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Inventory Reconciliation Tool")
+        self.root.geometry("220x100")  # Set the initial size of the window
 
         self.reference_file_path = ""
         self.scan_file_path = ""
 
-        # UI Elements
+        # Add some padding on the top
+        self.root.grid_rowconfigure(1, pad=15)
+
+        # UI Elements with left margin
         self.label_reference = tk.Label(root, text="Reference File:")
-        self.label_reference.grid(row=0, column=0)
+        self.label_reference.grid(row=1, column=0, sticky="w", padx=(10, 0))  # Add left margin
 
         self.label_scan = tk.Label(root, text="Scan File:")
-        self.label_scan.grid(row=1, column=0)
+        self.label_scan.grid(row=2, column=0, sticky="w", padx=(10, 0))  # Add left margin
 
         self.btn_reference = tk.Button(root, text="Select Reference File", command=self.load_reference_file)
-        self.btn_reference.grid(row=0, column=1)
+        self.btn_reference.grid(row=1, column=1, sticky="ew")  # Align button to the right
 
         self.btn_scan = tk.Button(root, text="Select Scan File", command=self.load_scan_file)
-        self.btn_scan.grid(row=1, column=1)
+        self.btn_scan.grid(row=2, column=1, sticky="ew")  # Align button to the right
 
-        self.btn_reconcile = tk.Button(root, text="Reconcile", command=self.reconcile_files)
-        self.btn_reconcile.grid(row=2, column=0, columnspan=2)
+        self.btn_reconcile = tk.Button(root, text="Run Reconciliation", command=self.reconcile_files, bg='black', fg='white')
+        self.btn_reconcile.grid(row=3, column=1, columnspan=2, sticky="ew")  # Align button to the right
+
+    def load_reference_file(self):
+        self.reference_file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx;*.xls")])
+
+    def load_scan_file(self):
+        self.scan_file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx;*.xls")])
+
+    def reconcile_files(self):
+        if not self.reference_file_path or not self.scan_file_path:
+            return
 
     def load_reference_file(self):
         self.reference_file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx;*.xls")])
@@ -137,7 +151,14 @@ class InventoryReconciliationApp:
         df_final.to_excel(export_file_path, index=False)
         print("\nReconciliation completed. Export file saved at:", export_file_path)
 
-        # Close the GUI window
+        # Change the color of the "Run Reconciliation" button to dark gray
+        self.btn_reconcile.configure(bg="dark gray")
+
+        # Display message box after reconciliation is completed
+        messagebox.showinfo("Reconciliation Completed",
+                            "Reconciliation completed. Export file saved at:\n" + export_file_path)
+
+        # Close the GUI window only when the user presses "OK" in the message box
         self.root.destroy()
 
 if __name__ == "__main__":
