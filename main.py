@@ -97,26 +97,28 @@ class InventoryReconciliationApp:
                 # 0 means there is no different columns' values
                 control_change = 0
 
+                df_buffer2 = pd.concat([df_buffer1, matching_row_scan])
+
                 # Check for differences in values and populate delta values accordingly
                 for col in reference_df.columns:
-                    if pd.isna(matching_row_reference[col][0]) and pd.isna(matching_row_scan[col][0]):
-                        continue
                     # If-condifiton to evalute if there is at least one difference between reference
                     # and scan files
                     if matching_row_reference[col][0] != matching_row_scan[col][0]:
-                        # Prepare log input to be filled in "Change" column in exported file
-                        delta_value = f"ref {col}: {matching_row_reference[col][0]} -> scan {col}: {matching_row_scan[col][0]}"
-                        df_buffer2 = pd.concat([df_buffer1, matching_row_scan])
-                        # Stores all tracked differences for that same Barcode Number
-                        bufferDeltaList.append(delta_value)
-                        # Sets the flag to 1, indicating there is at least 1 column with
-                        # Different values
-                        control_change = 1
+                        if pd.isna(matching_row_reference[col][0]) and pd.isna(matching_row_scan[col][0]):
+                            continue
+                        else:
+                            # Prepare log input to be filled in "Change" column in exported file
+                            delta_value = f"ref {col}: {matching_row_reference[col][0]} -> scan {col}: {matching_row_scan[col][0]}"
+                            # Stores all tracked differences for that same Barcode Number
+                            bufferDeltaList.append(delta_value)
+                            # Sets the flag to 1, indicating there is at least 1 column with
+                            # Different values
+                            control_change = 1
 
                     # If-condition to evaluate if the entry in reference and scan files are
                     # exactly the same
                     elif matching_row_reference[col][0] == matching_row_scan[col][0]:
-                        df_buffer2["Status"] = "F"
+                        continue
 
                 # At the end of all columns evaluation for that Barcode Number
                 # it is then defined Changed/different values are present
@@ -124,7 +126,7 @@ class InventoryReconciliationApp:
                     # Flag "C" added to new column from export file called Status
                     df_buffer2["Status"] = "C"
                 else:
-                    continue
+                    df_buffer2["Status"] = "F"
 
                 # Transform list into str and input "delta" column
                 df_buffer2["delta"] = "".join(str(bufferDeltaList))
