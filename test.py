@@ -4,8 +4,8 @@ import numpy as np
 # Provided data
 reference_list = [24, 29, 21]
 
-data_a = {'x': [24, 29], 'y': ['dog', 'car'], 'z': [None, 'ball']}
-data_b = {'x': [29, 21], 'y': ['dog', 'car'], 'z': [None, 'ball']}
+data_a = {'x': [24, 29], 'y': ['dog', 'car'], 'z': [None, 'ball'], 'zz': [10, 15.0]}
+data_b = {'x': [29, 21], 'y': ['dog', 'car'], 'z': [None, 'ball'], 'zz': [15, 10]}
 
 a = pd.DataFrame(data_a)
 b = pd.DataFrame(data_b)

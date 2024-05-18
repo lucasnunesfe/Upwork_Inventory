@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import pandas as pd
-import numpy as np
-import openpyxl
 
 class InventoryReconciliationApp:
     def __init__(self, root):
